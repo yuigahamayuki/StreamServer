@@ -13,10 +13,11 @@ class WriteBuffer
 public:
 	WriteBuffer();
 
-	size_t sizeWritten() { return insert_pos - start_pos; }
-	size_t sizeWritable() { return buffer_length - sizeWritten(); }
+	static size_t sizeLength()  { return buffer_length; }
+	size_t sizeWritten() const { return insert_pos - start_pos; }
+	size_t sizeWritable() const { return buffer_length - sizeWritten(); }
 
-	const char* buf() { return start_pos; }
+	const char* buf() const { return start_pos; }
 
 	void writeUInt8(uint8_t val) 
 	{
@@ -99,7 +100,7 @@ public:
 	void writeChunck(const void* src, size_t size);		// 写连续内存
 
 private:
-	static const size_t buffer_length = 1024;	// FIXME: 可能更改
+	static const size_t buffer_length = 1400;	// FIXME: 可能更改
 	char _buffer[buffer_length];
 	const char* start_pos;
 	char* insert_pos;

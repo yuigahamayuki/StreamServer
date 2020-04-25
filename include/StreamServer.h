@@ -13,7 +13,10 @@ extern "C"
 #include <libavformat/avformat.h>
 };
 
+#include <vector>
 #include "WriteBuffer.h"
+
+struct AVPacket;
 
 class StreamServer
 {
@@ -25,8 +28,19 @@ private:
 	void initSock();
 	void receiveAndSendDecoderParameters();
 	void writeVideoDecoderParameters(WriteBuffer& writeBuffer, const AVCodecParameters* decoderPara);
+	void loop();
+	// 发送AVPacket的参数与数据，如果一个packet过大，会进行分包
+	void setPacketDataBufferAndSend(AVPacket* packet, std::vector<WriteBuffer>& bufferVec);
+	// 实际发送AVPacket
+	void sendPacketDataCore(const std::vector<WriteBuffer>& bufferVec);
+	// 判断是否发送成功
+	bool isSendSucceed();
 
 	SOCKET _sockfd;
 	sockaddr_in _clientSockAddr;
 	AVFormatContext* _formatContext;
+	// 发送的packet的序号
+	unsigned int _packetCnt = 0;
+	// 视频流的idx
+	int _videoStream = -1;
 };
