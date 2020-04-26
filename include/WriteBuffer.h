@@ -13,6 +13,9 @@ class WriteBuffer
 public:
 	WriteBuffer();
 
+	//WriteBuffer(const WriteBuffer&) = delete;
+	WriteBuffer& operator=(const WriteBuffer&) = delete;
+
 	static size_t sizeLength()  { return buffer_length; }
 	size_t sizeWritten() const { return insert_pos - start_pos; }
 	size_t sizeWritable() const { return buffer_length - sizeWritten(); }

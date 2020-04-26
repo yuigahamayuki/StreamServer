@@ -20,10 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\Status.cpp" />
     <ClCompile Include="..\src\StreamServer.cpp" />
     <ClCompile Include="..\src\WriteBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\Status.h" />
     <ClInclude Include="..\include\StreamServer.h" />
     <ClInclude Include="..\include\WriteBuffer.h" />
   </ItemGroup>

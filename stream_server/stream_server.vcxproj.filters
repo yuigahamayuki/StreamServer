@@ -24,12 +24,18 @@
     <ClCompile Include="..\src\WriteBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Status.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\StreamServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\WriteBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Status.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

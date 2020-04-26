@@ -15,6 +15,7 @@ extern "C"
 
 #include <vector>
 #include "WriteBuffer.h"
+#include "Status.h"
 
 struct AVPacket;
 
@@ -36,6 +37,7 @@ private:
 	// 判断是否发送成功
 	bool isSendSucceed();
 
+	Status _serverStatus;
 	SOCKET _sockfd;
 	sockaddr_in _clientSockAddr;
 	AVFormatContext* _formatContext;
