@@ -63,7 +63,7 @@ void StreamServer::initSock()
 void StreamServer::receiveAndSendDecoderParameters()
 {
 	//const char* file_name = "D:\\Movie\\[Mabors-Sub][Kono Subarashii Sekai ni Shukufuku o! Kurenai Densetsu][Movie][1080P][CHS&JPN][BDrip][AVC AAC YUV420P8].mp4";
-	char file_name[256];
+	char file_name[512];
 	memset(file_name, 0, sizeof(file_name));
 	int len = sizeof(_clientSockAddr);	// *** 必须初始化长度，不能初始化为0
 	int receive_len = recvfrom(_sockfd, file_name, sizeof(file_name), 0, (sockaddr*)&_clientSockAddr, &len);
@@ -192,6 +192,10 @@ void StreamServer::loop()
 			av_packet_unref(packet);
 
 			_packetCnt++;
+
+
+			//const int sleep_time = 1;		// FIXME: 这个值可能要改，减慢发包速度
+			//Sleep(sleep_time);
 		}
 		
 	}
