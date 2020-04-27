@@ -175,13 +175,13 @@ void StreamServer::loop()
 			if (packet->stream_index != _videoStream)		// FIXME: 以后添加音频需要改
 				continue;
 
-			std::vector<WriteBuffer> bufferVec;
+			std::vector<WriteBuffer> bufferVec;		// 下标i标识分片号
 			setPacketDataBufferAndSend(packet, bufferVec);
 
-			while (!isSendSucceed())
+			while (!isSendSucceed(bufferVec))
 			{
-				if (_serverStatus.getStatus() == Status::STATUS_SEND_PACKET)	// 有可能在发送失败准备重发期间收到暂停发送命令
-					sendPacketDataCore(bufferVec);
+				//if (_serverStatus.getStatus() == Status::STATUS_SEND_PACKET)	// 有可能在发送失败准备重发期间收到暂停发送命令
+					//sendPacketDataCore(bufferVec);
 			}
 
 
@@ -329,54 +329,57 @@ void StreamServer::sendPacketDataCore(const std::vector<WriteBuffer>& bufferVec)
 	}
 }
 
-bool StreamServer::isSendSucceed()
+void StreamServer::sendPacketDataOfFrag(const std::vector<WriteBuffer>& buffVec, uint16_t fragNo)
 {
-	timeval tv;
-	tv.tv_sec = 0, tv.tv_usec = 1000;		// FIXME: 超时值可能要改
-	fd_set readFDSet;
-	FD_ZERO(&readFDSet);
-	FD_SET(_sockfd, &readFDSet);
-	int ret = select(_sockfd + 1, &readFDSet, nullptr, nullptr, &tv);
+	auto &writeBuffer = buffVec[fragNo];
 
-	if (ret < 0)
+	int expected_send_size = writeBuffer.sizeWritten();
+	int actual_send_size = sendto(_sockfd, writeBuffer.buf(), expected_send_size, 0, (const sockaddr*)&_clientSockAddr, sizeof(_clientSockAddr));
+
+	if (actual_send_size != expected_send_size)
 	{
-		av_log(nullptr, AV_LOG_ERROR, "select error.\n");
+		auto pp = 1;
+	}
+
+	if (actual_send_size < 0)
+	{
+		av_log(nullptr, AV_LOG_ERROR, "send fail\n");
+	}
+}
+
+bool StreamServer::isSendSucceed(const std::vector<WriteBuffer>& bufferVec)
+{
+	char buf[3] = { 0 };
+	int read_size = recvfrom(_sockfd, buf, sizeof(buf), 0, NULL, NULL);
+
+	if (buf[0] == 'a')		// ack
+	{
+		av_log(nullptr, AV_LOG_INFO, "send packet succeed.\n");
+		return true;
+	}
+
+	if (buf[0] == 'r')		// resend packet request，主要用于防止丢包
+	{
+		char* ptr = buf;
+		ptr++;
+		uint16_t* addr = reinterpret_cast<uint16_t*>(ptr);
+		uint16_t fragNo = *addr;
+		sendPacketDataOfFrag(bufferVec, fragNo);
+		av_log(nullptr, AV_LOG_INFO, "send packet failure, resend fragNo. %u.\n", fragNo);
 		return false;
 	}
 
-	if (FD_ISSET(_sockfd, &readFDSet))
+	if (buf[0] == 'w')		// pause sending packet 防止客户端缓冲区塞过多
 	{
-		char buf = '\0';
-		int read_size = recvfrom(_sockfd, &buf, sizeof(buf), 0, NULL, NULL);
-		
-		if (buf == 'a')		// ack
-		{
-			av_log(nullptr, AV_LOG_INFO, "send packet succeed.\n");
-			return true;
-		}
-
-		if (buf == 'r')		// resend packet request，主要用于防止丢包
-		{
-			av_log(nullptr, AV_LOG_INFO, "send packet failure, some packets lost.\n");
-			return false;
-		}
-
-		if (buf == 'w')		// pause sending packet 防止客户端缓冲区塞过多
-		{
-			_serverStatus.setStatus(Status::STATUS_SEND_PAUSE);
-			av_log(nullptr, AV_LOG_INFO, "receive pause sending packet command during resending packet.\n");
-			return false;
-		}
-
-		if (buf == 's')		// 重新开始发送流程，注意与'r'区别
-		{
-			_serverStatus.setStatus(Status::STATUS_SEND_PACKET);
-			av_log(nullptr, AV_LOG_INFO, "receive restart sending packet command during resending packet.\n");
-			return false;
-		}
+		_serverStatus.setStatus(Status::STATUS_SEND_PAUSE);
+		av_log(nullptr, AV_LOG_INFO, "receive pause sending packet command during resending packet.\n");
+		return false;
 	}
 
-	// 超时时间到，仍未收到来自客户端的响应（不论是ack还是重发请求）
-	av_log(nullptr, AV_LOG_INFO, "send packet failure, time out.\n");
-	return false;
+	if (buf[0] == 's')		// 重新开始发送流程，注意与'r'区别
+	{
+		_serverStatus.setStatus(Status::STATUS_SEND_PACKET);
+		av_log(nullptr, AV_LOG_INFO, "receive restart sending packet command during resending packet.\n");
+		return false;
+	}
 }

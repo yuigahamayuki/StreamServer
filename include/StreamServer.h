@@ -32,10 +32,12 @@ private:
 	void loop();
 	// 发送AVPacket的参数与数据，如果一个packet过大，会进行分包
 	void setPacketDataBufferAndSend(AVPacket* packet, std::vector<WriteBuffer>& bufferVec);
-	// 实际发送AVPacket
+	// 实际发送AVPacket，把整个AVPacket所有分节都发送给客户端
 	void sendPacketDataCore(const std::vector<WriteBuffer>& bufferVec);
+	// 发送某一个分节
+	void sendPacketDataOfFrag(const std::vector<WriteBuffer>& buffVec, uint16_t fragNo);
 	// 判断是否发送成功
-	bool isSendSucceed();
+	bool isSendSucceed(const std::vector<WriteBuffer>& bufferVec);
 
 	Status _serverStatus;
 	SOCKET _sockfd;
