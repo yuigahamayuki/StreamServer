@@ -194,8 +194,8 @@ void StreamServer::loop()
 			_packetCnt++;
 
 
-			//const int sleep_time = 1;		// FIXME: 这个值可能要改，减慢发包速度
-			//Sleep(sleep_time);
+			const int sleep_time = 24;		// FIXME: 这个值可能要改，减慢发包速度
+			Sleep(sleep_time);
 		}
 		
 	}

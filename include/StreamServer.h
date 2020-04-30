@@ -24,6 +24,9 @@ class StreamServer
 public:
 	StreamServer();
 	~StreamServer();
+
+	StreamServer(const StreamServer&) = delete;
+	StreamServer& operator=(const StreamServer&) = delete;
 	void start();
 private:
 	void initSock();
